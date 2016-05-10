@@ -151,7 +151,7 @@
                     (
                       {
                         viewerType = "MmLabelView";
-                        label = "Correspondence (both sender and recipients participants)";
+                        label = "Correspondence (sender and recipient(s) are participants)";
                       },
                       { viewerType = "MmSeparatorView"; },
                       {
