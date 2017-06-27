@@ -474,21 +474,18 @@
 						formatString = "${#Flags}";
 						suffix = { string = " "; };
 					}
-					//{
-					//	prefix = { string = "["; };
-					//	formatString = "${flags.blob}";
-					//	suffix = { string = "] "; };
-					//},
-					//{
-					//	formatString = "${subject.body}";
-					//	singleClick =
-					//	{
-					//		titleFormatting = { prefixString = "Related to "; formatString = "“${subject.body}”"; };
-					//		queryFormatting = { formatString = "subject.body = '${subject.body}'"; escapeSingleQuotes = //1; };
-					//	};
-					//},
 				);
 			},
+			{
+				prefix = { string = "\tsource\t"; fontStyle = bold; color = '#777777'; };
+				children =
+				(
+					{
+						//formatString = "${#source.path.noinbox} – ${#source.#name}";
+						formatString = "${#source.#name}:${#source.path}";
+					}
+				);
+			}
 		);
 	};
 }

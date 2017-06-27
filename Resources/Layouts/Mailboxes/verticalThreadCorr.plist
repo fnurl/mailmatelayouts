@@ -1,5 +1,6 @@
 {
   name = "Vertical: Thread+Corr";
+  enabled = 0;
   rootViewer =
   {
     viewerType = "MmSplitView";

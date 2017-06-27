@@ -1,5 +1,6 @@
 {
   name = "Vertical: Msg+Thread+Corr";
+  enabled = 0;
   rootViewer =
   {
     identifier = "mailboxRightpanelSplit";

@@ -1,5 +1,6 @@
 {
   name = "Vertical: Msg+Thread+Tag";
+  enabled = 0;
   rootViewer =
   {
     viewerType = "MmSplitView";
