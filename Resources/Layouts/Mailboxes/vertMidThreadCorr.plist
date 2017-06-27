@@ -1,0 +1,191 @@
+{
+  name = "Vertical: +Thread/Corr";
+  rootViewer =
+    { // main split {{{
+      identifier = "mainSplit";
+      viewerType = "MmSplitView";
+      orientation = "horizontal";
+      children =
+      (
+        { // leftPanel: Mailboxes {{{
+          viewerType = "MmBoxView";
+          orientation = "vertical";
+          defaultSize = 200;
+          minWidth = 100;
+          autoresize = 0;
+          dragRect = { width = 16.0; height = 16.0; location = "bottomRight"; };
+          children =
+          (
+            {  // mailboxes children {{{
+              identifier = "mailboxesOutline";
+              viewerType = "MmMailboxesOutlineView";
+              stickyMessages = 2;
+            },
+            {
+              viewerType = "MmMailboxesStatusBar";
+            }
+          ); // }}}
+          toggleMenuTitle = "Mailboxes";
+          toggleKeyEquivalent = "^~@s";
+        }, // End mailboxes }}}
+
+        { // rightPanel: contains (main outline + (thread + (message + correspondance))) {{{
+          identifier = "rightPanel";
+          viewerType = "MmBoxView";
+          orientation = "vertical";
+          children = 
+          (
+            {  // rightpanel children
+              identifier = "pathControl";
+              viewerType = "MmPathControlView";
+              sources = ( { sourceIdentifier = "mailboxesOutline"; } );
+            }, 
+            { viewerType = "MmSeparatorView"; showWithViews = ( "pathControl" ); },
+            { // # split 1: split(outline-panel, split(thread, split(message, corr))) {{{
+              identifier = "outlineSplit";
+              viewerType = "MmSplitView";
+              orientation = "vertical";
+              // is this the panel that gets shrunk?
+              collapsibleSubview = 2; // Incomplete support -- no way to get it back (1 = first, 2 = last) 
+              children = 
+              (
+                { // mainOutline {{{
+                  identifier = "mainOutline";
+                  viewerType = "MmMessagesOutlineView";
+                  columnSettings = "outlineColumns";
+                  sources = ( { sourceIdentifier = "pathControl"; } );
+                }, // end outline }}}
+
+                { // # split 2: split(thread, corr) {{{
+                  identifier = "threadCorrSplit";
+                  viewerType = "MmSplitView";
+                  orientation = "horizontal";
+                  defaultSize = 200;
+                  minHeight = 100;
+                  autoresize = 0;
+
+                  // is this the panel that gets shrunk?
+                  collapsibleSubview = 1; // Incomplete support -- no way to get it back (1 = first, 2 = last) 
+                  children =
+                  (
+                    { // threadPanel  {{{
+                      identifier = "threadPanel";
+                      viewerType = "MmBoxView";
+                      children = 
+                      (
+                        {
+                          viewerType = "MmLabelView";
+                          label = "Thread (other messages part of the thread)";
+                        },
+                        { viewerType = "MmSeparatorView"; },
+                        {
+                          identifier = "threadOutline";
+                          viewerType = "MmMessagesOutlineView";
+                          minWidth = 100;
+                          sources = ( { sourceIdentifier = "mainOutline"; } );
+                          selectionSources = ( { sourceIdentifier = "mainOutline"; } );
+                          transformation = "$ALL_MESSAGES.filter(#thread-id =[c] $mainOutline.#thread-id)";
+                          defaultColumns = ( "relativeDate", "subject", "from", "mailbox" );
+                          outlineColumn = "subject";
+                        }, // end message list
+                      );
+                      toggleMenuTitle = "Thread View";
+                      toggleKeyEquivalent = "^~@t";
+                    }, // End of threadPanel }}}
+
+                    { // correspondancePanel {{{
+                      identifier = "correspondencePanel";
+                      viewerType = "MmBoxView";
+                      children = 
+                      (
+                        { // correspondancePanel label {{{
+                          viewerType = "MmLabelView";
+                          label = "Correspondence (both sender and recipients participants)";
+                        }, // }}}
+                        { viewerType = "MmSeparatorView"; },
+                        { // correspondenceOutline {{{
+                          identifier = "correspondenceOutline";
+                          viewerType = "MmMessagesOutlineView";
+                          minWidth = 100;
+
+                          sources = ( { sourceIdentifier = "mainOutline"; } );
+                          selectionSources = ( { sourceIdentifier = "threadOutline"; } );
+
+                          // Correspondence participation is when both the sender 
+                          // and the recipient of the message(s) selected in the 
+                          // in main (top) message list are either the sender or
+                          // a recipient. I.e. both can be recipients.
+                          //transformation = "$ALL_MESSAGES.filter( (#any-address.address = $mainOutline.to.address or #any-address.name = $mainOutline.to.name) and (#any-address.address = $mainOutline.from.address or #any-address.name = $mainOutline.from.name) )";
+                          transformation = "$ALL_MESSAGES.filter( #any-address.address = $mainOutline.from.address )";
+
+                          defaultColumns = ( "relativeDate", "subject", "from", "mailbox" );
+                          outlineColumn = "subject";
+                        }, // end correspondance outline }}}
+
+                      ); // end correspondancePanel children
+                      toggleMenuTitle = "Correspondence View";
+                      toggleKeyEquivalent = "^~@c";
+                    }, // end of correspondancePanel }}}
+                  ); // end split 2 children
+                }, // end split 2 }}}
+
+                { // messagePanel: (headers + message) {{{
+                  identifier = "messagePanel";
+                  viewerType = "MmBoxView";
+                  orientation = "vertical";
+                  minHeight = 150;
+                  children =
+                  (
+                    {
+                      identifier = "headersView";
+                      viewerType = "MmHeadersView";
+                      sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                      inject = ( "headersFormatting.plist" );
+                    },
+                    { viewerType = "MmSeparatorView"; showWithViews = ( "headersView" ); },
+                    {
+                      identifier = "tagsEditor";
+                      viewerType = "MmTagsEditor";
+                      sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                    },
+                    { viewerType = "MmSeparatorView"; showWithViews = ( "tagsEditor" ); },
+                    {
+                      identifier = "blockingView";
+                      viewerType = "MmImageBlockingView";
+                      sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                      transformation = "$correspondenceOutline.filter(##blocked-count exists)";
+                    },
+                    { viewerType = "MmSeparatorView"; showWithViews = ( "blockingView" ); },
+                    {
+                      identifier = "dummyMessageView";
+                      viewerType = "MmDummyMessageView";
+                      sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                      transformation = "$correspondenceOutline.filter(#dummy-message exists)";
+                    },
+                    { viewerType = "MmSeparatorView"; showWithViews = ( "dummyMessageView" ); },
+                    {
+                      identifier = "securityView";
+                      viewerType = "MmSecurityView";
+                      sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                      transformation = "$correspondenceOutline.filter(##security-problem exists)";
+                    },
+                    { viewerType = "MmSeparatorView"; showWithViews = ( "securityView" ); },
+                    {
+                      identifier = "messageView";
+                      viewerType = "MmWebView";
+                      sources = ( { sourceIdentifier = "correspondenceOutline"; } );
+                      minWidth = 250;
+                    },
+                  ); // end messagePanel children
+                  toggleMenuTitle = "Message View";
+                  toggleKeyEquivalent = "^~@m";
+                }, // end of messagePanel }}}
+
+              ); // End split 1 children
+            }, // End of split 1 }}}
+          ); // End rightPanel children
+        }, // End rightPanel }}}
+
+      ); // End main split children
+    }; // End mainSplit }}}
+}
